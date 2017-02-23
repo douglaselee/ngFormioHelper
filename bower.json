@@ -21,13 +21,17 @@
   "dependencies": {
     "angular-ui-router": "^0.4.2",
     "lodash": "^4.17.4",
-    "ng-formio": "^2.10.2",
-    "ng-formio-grid": "^0.12.2",
+    "ng-formio": "../../ng-formio",
+    "ng-formio-grid": "../../ng-formio-grid",
     "angular-paginate-anything": "^4.2.0",
-    "ng-formio-builder": "^2.10.2"
+    "ng-formio-builder": "../../ng-formio-builder"
   },
   "main": [
     "dist/ng-formio-helper.js",
     "dist/ng-formio-builder.js"
-  ]
+  ],
+  "resolutions": {
+    "angular": ">=1.5",
+    "angular-bootstrap": "^2.5.0"
+  }
 }
