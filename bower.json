@@ -32,6 +32,7 @@
   ],
   "resolutions": {
     "angular": ">=1.5",
-    "angular-bootstrap": "^2.5.0"
+    "angular-bootstrap": "^2.5.0",
+    "ng-dialog": "^1.0.1"
   }
 }
