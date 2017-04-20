@@ -23,16 +23,31 @@ angular.module('ngFormBuilderHelper')
     var formTag = FormioHelperConfig.tag || 'common';
     $scope.formUrl += $stateParams.formId ? ('/' + $stateParams.formId) : '';
     $scope.form = {
+      display: 'form',
       components:[],
       type: ($stateParams.formType ? $stateParams.formType : 'form'),
       tags: [formTag]
     };
+    $scope.tags = [{text: formTag}];
     $scope.formio = new Formio($scope.formUrl);
+    $scope.formDisplays = [
+      {
+        name: 'form',
+        title: 'Form'
+      },
+      {
+        name: 'wizard',
+        title: 'Wizard'
+      }
+    ];
 
     // Load the form if the id is provided.
     if ($stateParams.formId) {
       $scope.formLoadPromise = $scope.formio.loadForm().then(function(form) {
+        form.display = form.display || 'form';
         $scope.form = form;
+        var tags = form.tags || [];
+        $scope.tags = tags.map(function(tag) { return {text: tag}; });
         return form;
       }, FormioAlerts.onError.bind(FormioAlerts));
     }
@@ -75,7 +90,20 @@ angular.module('ngFormBuilderHelper')
       if (!$scope.form.name || $scope.form.name === _.camelCase(oldTitle)) {
         $scope.form.name = _.camelCase($scope.form.title);
       }
+      if ($scope.$parent && $scope.$parent.form) {
+        $scope.$parent.form.title = $scope.form.title;
+      }
     };
+
+    // Update form tags
+    $scope.updateFormtags = function() {
+      $scope.form.tags = $scope.tags.map(function(tag) { return tag.text; });
+    };
+
+    // When display is updated
+    $scope.$watch('form.display', function (display) {
+      $scope.$broadcast('formDisplay', display);
+    });
 
     // When a submission is made.
     $scope.$on('formSubmission', function(event, submission) {
@@ -121,6 +149,7 @@ angular.module('ngFormBuilderHelper')
     // Save a form.
     $scope.saveForm = function() {
       $scope.formio.saveForm(angular.copy($scope.form)).then(function(form) {
+        angular.merge($scope.form, form);
         var method = $stateParams.formId ? 'updated' : 'created';
         FormioAlerts.addAlert({
           type: 'success',
