@@ -32,10 +32,17 @@ angular.module('ngFormioHelper')
             element: error.path
           });
         }
-        else {
-          var errors = error.hasOwnProperty('errors') ? error.errors : error.data.errors;
-          angular.forEach(errors, showError.bind(this));
+
+        var errors = {};
+
+        if (error.hasOwnProperty('errors')) {
+            errors = error.errors;
         }
+        else if (error.hasOwnProperty('data') && error.data.hasOwnProperty('errors')) {
+            errors = error.data.errors;
+        }
+
+        angular.forEach(errors, showError.bind(this));
       }
     };
   }
