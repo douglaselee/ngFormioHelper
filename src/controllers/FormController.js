@@ -38,6 +38,10 @@ angular.module('ngFormBuilderHelper')
       {
         name: 'wizard',
         title: 'Wizard'
+      },
+      {
+        name: 'pdf',
+        title: 'PDF (to be investigated)'
       }
     ];
 
@@ -148,6 +152,9 @@ angular.module('ngFormBuilderHelper')
 
     // Save a form.
     $scope.saveForm = function() {
+      // Clear any previous alerts
+      FormioAlerts.getAlerts();
+
       $scope.formio.saveForm(angular.copy($scope.form)).then(function(form) {
         angular.merge($scope.form, form);
         var method = $stateParams.formId ? 'updated' : 'created';
@@ -155,7 +162,7 @@ angular.module('ngFormBuilderHelper')
           type: 'success',
           message: 'Successfully ' + method + ' form!'
         });
-        $state.go($scope.basePath + 'form.view', {formId: form._id});
+      //$state.go($scope.basePath + 'form.view', {formId: form._id});
       }, FormioAlerts.onError.bind(FormioAlerts));
     };
   }
