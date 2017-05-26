@@ -38,10 +38,6 @@ angular.module('ngFormBuilderHelper')
       {
         name: 'wizard',
         title: 'Wizard'
-      },
-      {
-        name: 'pdf',
-        title: 'PDF (to be investigated)'
       }
     ];
 
@@ -148,6 +144,10 @@ angular.module('ngFormBuilderHelper')
 
     $scope.$on('cancel', function() {
       $state.go($scope.basePath + 'form.view');
+    });
+
+    $scope.$on('saveForm', function() {
+      $scope.saveForm();
     });
 
     // Save a form.
