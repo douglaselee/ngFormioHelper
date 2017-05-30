@@ -143,7 +143,14 @@ angular.module('ngFormBuilderHelper')
     });
 
     $scope.$on('cancel', function() {
-      $state.go($scope.basePath + 'form.view');
+      // Where to go when cancelling update.
+      if ($scope.formId) {
+        $state.go($scope.basePath + 'form.view');
+      }
+      // Where to go when cancelling create.
+      else {
+        $state.go($scope.basePath + 'home');
+      }
     });
 
     $scope.$on('saveForm', function() {
