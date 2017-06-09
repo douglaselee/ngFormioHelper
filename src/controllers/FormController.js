@@ -153,7 +153,10 @@ angular.module('ngFormBuilderHelper')
       }
     });
 
-    $scope.$on('saveForm', function() {
+    $scope.$on('saveForm', function(event) {
+      // Stop propagation or another instance of FormController
+      // will do the same thing and PUT errors may occur
+      event.stopPropagation();
       $scope.saveForm();
     });
 
