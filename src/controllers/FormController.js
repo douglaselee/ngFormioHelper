@@ -127,8 +127,20 @@ angular.module('ngFormBuilderHelper')
       $scope.loading = false;
     });
 
+    // Remind to Save or Cancel
+    $scope.$root.$on('$stateChangeStart', function (event, toState, toParams) {
+      if ($scope.formDirty) {
+        FormioAlerts.addAlert({
+          type: 'danger',
+          message: 'Save or Cancel changes.'
+        });
+        event.preventDefault();
+      }
+    });
+
     // Called when the form is updated.
     $scope.$on('formUpdate', function(event, form) {
+      $scope.formDirty = true;
       $scope.form.components = form.components;
     });
 
@@ -147,6 +159,7 @@ angular.module('ngFormBuilderHelper')
     });
 
     $scope.$on('cancel', function() {
+      $scope.formDirty = $scope.$parent.formDirty = false;
       // Where to go when cancelling update.
       if ($scope.formId) {
         $state.go($scope.basePath + 'form.view');
@@ -162,6 +175,7 @@ angular.module('ngFormBuilderHelper')
       // will do the same thing and PUT errors may occur
       event.stopPropagation();
       $scope.saveForm();
+      $scope.formDirty = $scope.$parent.formDirty = false;
     });
 
     // Save a form.
