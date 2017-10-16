@@ -47,7 +47,7 @@ angular.module('ngFormBuilderHelper')
 
     // Load the form if the id is provided.
     if ($stateParams.formId) {
-      $scope.formLoadPromise = $scope.formio.loadForm().then(function(form) {
+      $scope.formLoadPromise = $scope.formio.loadForm(null, {ignoreCache: true}).then(function(form) {
         form.display = form.display || 'form';
         $scope.form = form;
         var tags = form.tags || [];
@@ -91,6 +91,7 @@ angular.module('ngFormBuilderHelper')
 
     // Match name of form to title if not customized.
     $scope.titleChange = function(oldTitle) {
+      $scope.formDirty = true;
       if (!$scope.form.name || $scope.form.name === _.camelCase(oldTitle)) {
         $scope.form.name = _.camelCase($scope.form.title);
       }
@@ -101,11 +102,29 @@ angular.module('ngFormBuilderHelper')
 
     // Update form tags
     $scope.updateFormTags = function() {
+      $scope.formDirty = true;
       $scope.form.tags = $scope.tags.map(function(tag) { return tag.text; });
     };
 
+    // When name is updated
+    $scope.$watch('form.name', function (name, previous) {
+      if (name !== previous && previous) {
+        $scope.formDirty = true;
+      }
+    });
+
+    // When path is updated
+    $scope.$watch('form.path', function (path, previous) {
+      if (path !== previous && previous) {
+        $scope.formDirty = true;
+      }
+    });
+
     // When display is updated
-    $scope.$watch('form.display', function (display) {
+    $scope.$watch('form.display', function (display, previous) {
+      if (display !== previous) {
+        $scope.formDirty = true;
+      }
       $scope.$broadcast('formDisplay', display);
     });
 
@@ -127,9 +146,10 @@ angular.module('ngFormBuilderHelper')
       $scope.loading = false;
     });
 
-    // Remind to Save or Cancel
     $scope.$root.$on('$stateChangeStart', function (event, toState, toParams) {
       if ($scope.formDirty) {
+        // Clear any alerts
+        FormioAlerts.getAlerts();
         FormioAlerts.addAlert({
           type: 'danger',
           message: 'Save or Cancel changes.'
@@ -159,7 +179,9 @@ angular.module('ngFormBuilderHelper')
     });
 
     $scope.$on('cancel', function() {
-      $scope.formDirty = $scope.$parent.formDirty = false;
+      // Clear any alerts
+      FormioAlerts.getAlerts();
+      $scope.formDirty = false;
       // Where to go when cancelling update.
       if ($scope.formId) {
         $state.go($scope.basePath + 'form.view');

@@ -1,7 +1,6 @@
 <form role="form" novalidate>
   <div id="form-group-title" class="form-group">
-    <label ng-if="!formDirty" for="title" class="control-label">Title Clean</label>
-    <label ng-if="formDirty"  for="title" class="control-label">Title Dirty</label>
+    <label for="title" class="control-label">Title</label>
     <input type="text" ng-model="form.title" ng-change="titleChange('{{form.title}}')" class="form-control" id="title" placeholder="Enter the form title"/>
   </div>
   <div id="form-group-name" class="form-group">
