@@ -18,7 +18,7 @@
     <div class="col col-sm-4">
       <div id="form-group-display" class="form-group">
         <label for="display" class="control-label">Display as</label>
-        <select class="form-control" id="display" ng-options="display.name as display.title for display in formDisplays" ng-model="form.display"></select>
+        <select class="form-control" id="display" ng-options="display.name as display.title for display in formDisplays" ng-model="form.display" ng-change="displayChange()"></select>
       </div>
     </div>
     <div class="col col-sm-4">

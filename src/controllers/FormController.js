@@ -122,11 +122,17 @@ angular.module('ngFormBuilderHelper')
 
     // When display is updated
     $scope.$watch('form.display', function (display, previous) {
-      if (display !== previous) {
-        $scope.formDirty = true;
-      }
+    // Don't set dirty here, controller shared by form.abstract route!
+    //if (display !== previous) {
+    //  $scope.formDirty = true;
+    //}
       $scope.$broadcast('formDisplay', display);
     });
+
+    // When display is updated in editor
+    $scope.displayChange = function() {
+      $scope.formDirty = true;
+    };
 
     // When a submission is made.
     $scope.$on('formSubmission', function(event, submission) {
