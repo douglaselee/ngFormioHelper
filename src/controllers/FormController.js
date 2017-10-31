@@ -74,10 +74,10 @@ angular.module('ngFormBuilderHelper')
                   type: 'read_own',
                   roles: [role._id]
                 },
-                {
-                  type: 'update_own',
-                  roles: [role._id]
-                },
+              //{
+              //  type: 'update_own',
+              //  roles: [role._id]
+              //},
                 {
                   type: 'delete_own',
                   roles: [role._id]
