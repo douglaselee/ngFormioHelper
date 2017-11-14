@@ -5,6 +5,7 @@ angular.module('ngFormBuilderHelper')
   '$state',
   'Formio',
   'FormioAlerts',
+  'FormioUtils',
   '$timeout',
   function (
     $scope,
@@ -12,6 +13,7 @@ angular.module('ngFormBuilderHelper')
     $state,
     Formio,
     FormioAlerts,
+    FormioUtils,
     $timeout
   ) {
     $scope.token = Formio.getToken();
@@ -89,6 +91,26 @@ angular.module('ngFormBuilderHelper')
       $state.go($scope.basePath + 'form.submission.delete', {
         subId: submission._id
       });
+    });
+
+    $scope.$on('rowCellEdit', function(event, rowEntity, colDef, newValue, oldValue) {
+      if (newValue !== oldValue) {
+        var submit   = $scope.formUrl + '/submission/' + rowEntity._id;
+        var formio   = new Formio(submit);
+
+        FormioUtils.eachComponent(colDef.form.components, function (component) {
+          FormioUtils.checkCalculated(component, rowEntity, rowEntity.data);
+        });
+
+        formio.saveSubmission(rowEntity).then(function(submission) {
+          FormioAlerts.getAlerts();
+        }, function(error) {
+          FormioAlerts.getAlerts();
+          angular.forEach(error.details, function(detail) {
+            FormioAlerts.onError(detail);
+          });
+        });
+      }
     });
   }
 ]);
