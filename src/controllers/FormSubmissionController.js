@@ -109,6 +109,9 @@ angular.module('ngFormBuilderHelper')
           angular.forEach(error.details, function(detail) {
             FormioAlerts.onError(detail);
           });
+          formio.loadSubmission().then(function(submission) {
+            rowEntity.data = submission.data;
+          });
         });
       }
     });
