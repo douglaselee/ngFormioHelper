@@ -94,6 +94,7 @@ angular.module('ngFormBuilderHelper')
       $scope.formDirty = true;
       if (!$scope.form.name || $scope.form.name === _.camelCase(oldTitle)) {
         $scope.form.name = _.camelCase($scope.form.title);
+        $scope.form.path = $scope.form.name.toLowerCase();
       }
       if ($scope.$parent && $scope.$parent.form) {
         $scope.$parent.form.title = $scope.form.title;
