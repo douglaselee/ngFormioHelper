@@ -38,10 +38,6 @@ angular.module('ngFormBuilderHelper')
       {
         name: 'wizard',
         title: 'Wizard'
-      },
-      {
-        name: 'pdf',
-        title: 'PDF'
       }
     ];
 
