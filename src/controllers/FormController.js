@@ -59,7 +59,7 @@ angular.module('ngFormBuilderHelper')
             return;
           }
           angular.forEach(roles, function(role) {
-            if (!role.admin && !role.default) {
+            if (!role.admin && !role.default && role.title === 'Authenticated') {
               // Add access to the form being created to allow for authenticated people to create their own.
               $scope.form.submissionAccess = [
                 {
