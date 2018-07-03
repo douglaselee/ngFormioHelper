@@ -438,7 +438,7 @@ angular.module('ngFormioHelper')
     var formAccess = {};
     var submissionAccess = {};
     var roles = {};
-    return {
+    var FormioAuth = {
       setForceAuth: function (allowed) {
         if (typeof allowed === 'boolean') {
           allowedStates = allowed ? ['auth'] : [];
@@ -447,7 +447,26 @@ angular.module('ngFormioHelper')
           allowedStates = allowed;
         }
       },
-      setStates: function (anon, auth) {
+      auth: function(user, resource, $rootScope, $q) {
+        return $q.all([$rootScope.projectRequest(), $rootScope.accessRequest()]).then(function() {
+          return $rootScope.setUser(user, resource);
+        });
+      },
+      login: function(user, resource, $rootScope, $state, $q) {
+        return FormioAuth.auth(user, resource, $rootScope, $q).then(function(user) {
+          var authRedirect = window.sessionStorage.getItem('authRedirect');
+          if (authRedirect) {
+            authRedirect = JSON.parse(authRedirect);
+            window.sessionStorage.removeItem('authRedirect');
+            $state.go(authRedirect.toState.name, authRedirect.toParams);
+          }
+          else {
+            $state.go(authState);
+          }
+          return user;
+        });
+      },
+      setStates: function(anon, auth) {
         anonState = anon;
         authState = auth;
       },
@@ -475,34 +494,30 @@ angular.module('ngFormioHelper')
           path = name;
         }
         var tpl = name.toLowerCase() + '.html';
-        $stateProvider
-          .state('auth.' + name, {
-            url: '/' + path,
-            templateUrl: noOverride ? 'formio-helper/auth/' + tpl : 'views/user/' + tpl,
-            controller: ['$scope', '$state', '$rootScope', '$q', function ($scope, $state, $rootScope, $q) {
+        $stateProvider.state('auth.' + name, {
+          url: '/' + path,
+          templateUrl: noOverride ? 'formio-helper/auth/' + tpl : 'views/user/' + tpl,
+          controller: [
+            '$scope',
+            '$state',
+            '$rootScope',
+            '$q',
+            function (
+              $scope,
+              $state,
+              $rootScope,
+              $q
+            ) {
               $scope.currentForm = form;
               $scope.$on('formSubmission', function (err, submission) {
                 if (!submission) {
                   return;
                 }
-
-                $q.all([$rootScope.projectRequest(), $rootScope.accessRequest()]).then(function() {
-                  $rootScope.setUser(submission, resource);
-
-                  var authRedirect = window.sessionStorage.getItem('authRedirect');
-
-                  if (authRedirect) {
-                    authRedirect = JSON.parse(authRedirect);
-                    window.sessionStorage.removeItem('authRedirect');
-                    $state.go(authRedirect.toState.name, authRedirect.toParams);
-                  }
-                  else {
-                    $state.go(authState);
-                  }
-                });
+                FormioAuth.login(submission, resource, $rootScope, $state, $q);
               });
-            }]
-          })
+            }
+          ]
+        });
       },
       $get: [
         'Formio',
@@ -522,10 +537,12 @@ angular.module('ngFormioHelper')
           $q
         ) {
           return {
-            init: function () {
+            init: function (options) {
               init = true;
+              $rootScope.user = null;
+              $rootScope.isReady = false;
 
-              // Load the project.
+              // Load the current project.
               $rootScope.projectRequest = function () {
                 return Formio.makeStaticRequest(Formio.getProjectUrl()).then(function(project) {
                   angular.forEach(project.access, function(access) {
@@ -536,7 +553,6 @@ angular.module('ngFormioHelper')
                   return null;
                 });
               };
-              $rootScope.projectPromise = $rootScope.projectRequest();
 
               // Get the access for this project.
               $rootScope.accessRequest = function () {
@@ -554,16 +570,31 @@ angular.module('ngFormioHelper')
                   return null;
                 });
               };
-              $rootScope.accessPromise = $rootScope.accessRequest();
 
-              $rootScope.user = null;
-              $rootScope.isReady = false;
-              $rootScope.userPromise = Formio.currentUser().then(function (user) {
-                $rootScope.setUser(user, localStorage.getItem('formioRole'));
-                return user;
+              var currentUser = null;
+              if (options && options.oauth) {
+                // Make a fix to the hash to remove starting "/" that angular puts there.
+                if (window.location.hash && window.location.hash.match(/^#\/access_token/)) {
+                  history.pushState(null, null, window.location.hash.replace(/^#\/access_token/, '#access_token'));
+                }
+
+                // Initiate the SSO if they provide oauth settings.
+                currentUser = Formio.ssoInit(options.oauth.type, options.oauth.options);
+              }
+              else {
+                currentUser = Formio.currentUser();
+              }
+
+              // Get the user promise when the user is done loading.
+              var currentAppRole = localStorage.getItem('formioAppRole') || 'user';
+              $rootScope.userPromise = currentUser.then(function(user) {
+                if (!user) {
+                  return $rootScope.setUser(null, currentAppRole);
+                }
+                return FormioAuth.auth(user, currentAppRole, $rootScope, $q);
               });
 
-              // Return if the user has a specific role.
+                // Return if the user has a specific role.
               $rootScope.hasRole = function(roleName) {
                 roleName = roleName.toLowerCase();
                 if (!$rootScope.user) {
@@ -602,9 +633,8 @@ angular.module('ngFormioHelper')
               };
 
               // Create a promise that loads when everything is ready.
-              $rootScope.whenReady = $rootScope.accessPromise.then($rootScope.userPromise).then(function() {
+              $rootScope.whenReady = $rootScope.userPromise.then(function() {
                 $rootScope.isReady = true;
-                $rootScope.assignRoles();
                 return true;
               });
 
@@ -639,6 +669,7 @@ angular.module('ngFormioHelper')
                   user: $rootScope.user,
                   role: $rootScope.role
                 });
+                return $rootScope.user;
               };
 
               $rootScope.checkAccess = function(access, permissions) {
@@ -764,6 +795,8 @@ angular.module('ngFormioHelper')
         }
       ]
     };
+
+    return FormioAuth;
   }
 ]);
 
